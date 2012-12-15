@@ -121,7 +121,7 @@
     
     AVCaptureConnection *videoConnection = [newCaptureVideoPreviewLayer connection];
     if ([videoConnection isVideoOrientationSupported]) {
-        [videoConnection setVideoOrientation:[self videoOrientationFromInterfaceOrientation:[UIDevice currentDevice].orientation]];
+        [videoConnection setVideoOrientation:cameraOrientation];
     }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated"
@@ -163,21 +163,6 @@
     [displayV release];
     
   	return self;
-}
-
--(AVCaptureVideoOrientation)videoOrientationFromInterfaceOrientation:(UIInterfaceOrientation)orientation{
-    switch (orientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-            return AVCaptureVideoOrientationLandscapeLeft;
-        case UIInterfaceOrientationLandscapeRight:
-            return AVCaptureVideoOrientationLandscapeRight;
-        case UIInterfaceOrientationPortrait:
-            return AVCaptureVideoOrientationPortrait;
-        case UIInterfaceOrientationPortraitUpsideDown:
-            return AVCaptureVideoOrientationPortraitUpsideDown;
-        default:
-            return AVCaptureVideoOrientationPortrait;
-    }
 }
 
 -(void)unloadAV {
@@ -543,7 +528,18 @@
         }
 		
         [[self cameraView] setFrame:bounds];
-        [[self previewLayer] setOrientation:cameraOrientation];
+        
+        AVCaptureConnection *videoConnection = [[self previewLayer] connection];
+        if ([videoConnection isVideoOrientationSupported]) {
+            [videoConnection setVideoOrientation:cameraOrientation];
+        }
+        
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+        if ([[UIDevice currentDevice].systemVersion floatValue] < 6.0) {
+            [[self previewLayer] setOrientation:cameraOrientation];
+        }
+#pragma GCC diagnostic pop
         [[self previewLayer] setFrame:bounds];
   
         [displayView setTransform:CGAffineTransformIdentity];
