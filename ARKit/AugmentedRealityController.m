@@ -116,12 +116,21 @@
     AVCaptureVideoPreviewLayer *newCaptureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:avCaptureSession];
 
     [[camView layer] setMasksToBounds:YES];
-
     [newCaptureVideoPreviewLayer setFrame:[camView bounds]];
     
-    if ([newCaptureVideoPreviewLayer isOrientationSupported]) {
-        [newCaptureVideoPreviewLayer setOrientation:cameraOrientation];
+    
+    AVCaptureConnection *videoConnection = [newCaptureVideoPreviewLayer connection];
+    if ([videoConnection isVideoOrientationSupported]) {
+        [videoConnection setVideoOrientation:[self videoOrientationFromInterfaceOrientation:[UIDevice currentDevice].orientation]];
     }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+    if ([[UIDevice currentDevice].systemVersion floatValue] < 6.0) {
+        if ([newCaptureVideoPreviewLayer isOrientationSupported]) {
+            [newCaptureVideoPreviewLayer setOrientation:cameraOrientation];
+        }
+    }
+#pragma GCC diagnostic pop
     
     [newCaptureVideoPreviewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
     
@@ -154,6 +163,21 @@
     [displayV release];
     
   	return self;
+}
+
+-(AVCaptureVideoOrientation)videoOrientationFromInterfaceOrientation:(UIInterfaceOrientation)orientation{
+    switch (orientation) {
+        case UIInterfaceOrientationLandscapeLeft:
+            return AVCaptureVideoOrientationLandscapeLeft;
+        case UIInterfaceOrientationLandscapeRight:
+            return AVCaptureVideoOrientationLandscapeRight;
+        case UIInterfaceOrientationPortrait:
+            return AVCaptureVideoOrientationPortrait;
+        case UIInterfaceOrientationPortraitUpsideDown:
+            return AVCaptureVideoOrientationPortraitUpsideDown;
+        default:
+            return AVCaptureVideoOrientationPortrait;
+    }
 }
 
 -(void)unloadAV {
